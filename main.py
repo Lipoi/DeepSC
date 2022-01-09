@@ -113,11 +113,11 @@ if __name__ == '__main__':
     deepsc = DeepSC(args.num_layers, num_vocab, num_vocab,
                         num_vocab, num_vocab, args.d_model, args.num_heads,
                         args.dff, 0.1).to(device)
-    mi_net = Mine().to(device)
+    mi_net = Mine().to(device) # 将mi_net复制一份到GPU上，之后都在GPU上进行运算
     criterion = nn.CrossEntropyLoss(reduction = 'none')
     optimizer = torch.optim.Adam(deepsc.parameters(),
                                  lr=1e-4, betas=(0.9, 0.98), eps=1e-8, weight_decay = 5e-4)
-    mi_opt = torch.optim.Adam(mi_net.parameters(), lr=1e-3)
+    mi_opt = torch.optim.Adam(mi_net.parameters(), lr=1e-3) #训练优化mi_opt的参数
     #opt = NoamOpt(args.d_model, 1, 4000, optimizer)
     initNetParams(deepsc)
     for epoch in range(args.epochs):
@@ -127,15 +127,13 @@ if __name__ == '__main__':
         train(epoch, args, deepsc)
         avg_acc = validate(epoch, args, deepsc)
 
-        if avg_acc < record_acc:
+        if avg_acc < record_acc: #这里的acc指的是loss。
             if not os.path.exists(args.checkpoint_path):
                 os.makedirs(args.checkpoint_path)
             with open(args.checkpoint_path + '/checkpoint_{}.pth'.format(str(epoch + 1).zfill(2)), 'wb') as f:
                 torch.save(deepsc.state_dict(), f)
             record_acc = avg_acc
     record_loss = []
-
-
     
 
         
